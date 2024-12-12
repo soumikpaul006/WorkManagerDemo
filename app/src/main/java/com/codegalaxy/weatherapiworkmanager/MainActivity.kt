@@ -63,6 +63,10 @@ class MainActivity : AppCompatActivity() {
             WorkManager.getInstance(this).getWorkInfoByIdLiveData(workRequest.id)
                 .observe(this){ workInfo->
                     if (workInfo != null) {
+
+                        val progress=workInfo.progress.getInt("progress",0)
+                        binding.tvProgress.text="Progress: $progress%"
+
                         when(workInfo.state) {
 
                             WorkInfo.State.ENQUEUED ->

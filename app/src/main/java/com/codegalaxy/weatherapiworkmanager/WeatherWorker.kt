@@ -9,6 +9,7 @@ import androidx.work.Data
 import androidx.work.ListenableWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.codegalaxy.weatherapiworkmanager.network.ApiClient
 import com.codegalaxy.weatherapiworkmanager.repository.WeatherRepository
 import kotlinx.coroutines.CoroutineScope
@@ -29,10 +30,18 @@ class WeatherWorker(
 
         var finalResult:Result=Result.retry()
 
-        CoroutineScope(Dispatchers.Default).launch {
+        val job=CoroutineScope(Dispatchers.Default).launch {
             try {
 
+                setProgressAsync(workDataOf("progress" to 0))
+
+                Thread.sleep(500)
+                setProgressAsync(workDataOf("progress" to 50))
+
                 val response = repository.fetchWeather("kolkata")
+
+                Thread.sleep(1000)
+                setProgressAsync(workDataOf("progress" to 100))
 
                 val outputData = Data.Builder()
                     .putString("city", response.location.name)
@@ -41,12 +50,14 @@ class WeatherWorker(
 
                 showNotification(response.location.name, response.current.temp_c)
                 finalResult=Result.success(outputData)
+
             }
             catch (e:Exception) {
                 e.printStackTrace()
                 finalResult=Result.retry()
             }
         }
+        runBlocking { job.join() }
         return finalResult
     }
 
